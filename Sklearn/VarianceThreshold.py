@@ -15,3 +15,5 @@ sel = VarianceThreshold(threshold=(.8 * (1 - .8)))
 update_sel = sel.fit_transform(mat_file_value)
 
 print(len(update_sel))
+
+# 수정 필요
