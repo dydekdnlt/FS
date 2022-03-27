@@ -5,8 +5,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 
-train = pd.read_csv("../../DataSet/hepatitis.csv", header=None)
-train = np.where(train == "?", 0, train)
+train = pd.read_csv("../../DataSet/spambase.csv", header=None)
 label = np.array(train[0])
 value = np.delete(np.array(train), 0, axis=1)
 print(label)
