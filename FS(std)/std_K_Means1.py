@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 from sklearn.metrics import silhouette_score
 import random
-train = pd.read_csv("C:\\Users\\용다윗\\Desktop\\google_review_ratings.csv")
+train = pd.read_csv("../DataSet/google_review_ratings.csv")
 # print(train)
 
 train_row = train[['User']]

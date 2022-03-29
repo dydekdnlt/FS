@@ -4,7 +4,7 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-
+# 완료
 train = pd.read_csv("../../DataSet/wine.csv", header=None)
 label = np.array(train[0])
 value = np.delete(np.array(train), 0, axis=1)

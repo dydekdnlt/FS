@@ -8,16 +8,16 @@ from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import plotly.express as px
 
-mat_file_name = "../../DataSet/Yale_64x64.mat"
+mat_file_name = "../../DataSet/ORL_32x32.mat"
 mat_file = scipy.io.loadmat(mat_file_name)
 mat_file_value = mat_file["fea"] # 패턴
 mat_file_label = mat_file["gnd"] # 레이블
 
-# YaleB 데이터셋 : 470 클래스 수 : 38
-# ORL 데이터셋 : 678 클래스 수 : 40
-# Yale_64x64 데이터셋 : 388 , 클래스 수 : 15
+# YaleB 데이터셋 : 100 클래스 수 : 38
+# ORL 데이터셋 : 100 클래스 수 : 40
+# Yale_64x64 데이터셋 : 400 , 클래스 수 : 15
 
-X = SelectKBest(chi2, k=388).fit_transform(mat_file_value, mat_file_label)
+X = SelectKBest(chi2, k=100).fit_transform(mat_file_value, mat_file_label)
 # print(mat_file_value.shape)
 # print(X)
 # print(X.shape)
