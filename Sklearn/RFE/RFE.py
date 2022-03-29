@@ -6,8 +6,11 @@ import scipy.io
 import pandas as pd
 from sklearn.svm import SVR
 import numpy as np
+import time
 
-mat_file_name = "../../DataSet/ORL_32x32.mat"
+start = time.time()
+
+mat_file_name = "../../DataSet/YaleB_32x32.mat"
 mat_file = scipy.io.loadmat(mat_file_name)
 mat_file_value = mat_file["fea"]  # 패턴
 mat_file_label = mat_file["gnd"]  # 레이블
@@ -26,7 +29,7 @@ print("패턴 : ", new_mat_file_value)
 print("레이블", np_new_mat_file_label)
 estimator = SVR(kernel="linear")
 
-selector = RFE(estimator, n_features_to_select=100, step=1)
+selector = RFE(estimator, n_features_to_select=800, step=1)
 X = selector.fit_transform(new_mat_file_value, np_new_mat_file_label)
 
 print(X)
@@ -57,3 +60,5 @@ print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
 print(minScore)
+end = time.time()
+print(f"{end - start: .5f} sec")

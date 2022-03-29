@@ -4,6 +4,9 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
+import time
+
+start = time.time()
 # 완료
 train = pd.read_csv("../../DataSet/wine.csv", header=None)
 label = np.array(train[0])
@@ -49,4 +52,6 @@ print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
 print(minScore)
+end = time.time()
+print(f"{end - start: .5f} sec")
 

@@ -7,7 +7,8 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import plotly.express as px
-
+import time
+start = time.time()
 mat_file_name = "../../DataSet/ORL_32x32.mat"
 mat_file = scipy.io.loadmat(mat_file_name)
 mat_file_value = mat_file["fea"] # 패턴
@@ -46,5 +47,6 @@ new_Y_pred = new_clf.predict(new_X_test)
 # print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
 print(minScore)
-
+end = time.time()
+print(f"{end - start: .5f} sec")
 

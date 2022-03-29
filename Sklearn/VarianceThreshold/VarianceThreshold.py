@@ -5,6 +5,9 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
+import time
+
+start = time.time()
 
 mat_file_name = "../../DataSet/ORL_32x32.mat"
 mat_file = scipy.io.loadmat(mat_file_name)
@@ -45,6 +48,9 @@ print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
 print(minScore)
+
+end = time.time()
+print(f"{end - start: .5f} sec")
 
 
 # 수정 필요 : 리스트, 데이터프레임, 넘파이배열 다 안됨
