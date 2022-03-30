@@ -4,10 +4,13 @@ from sklearn.feature_selection import SelectKBest, chi2, f_classif
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
+import time
 # 레이블 g, b
+start = time.time()
 train = pd.read_csv("../../DataSet/ionosphere.csv", header=None)
 label = np.array(train[34])
 value = np.delete(np.array(train), 34, axis=1)
+value = np.delete(value, 1, axis=1)
 print(label)
 print(value)
 print(len(label))
@@ -50,4 +53,7 @@ print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
 print(minScore)
+end = time.time()
+print(f"{end - start: .5f} sec")
+
 

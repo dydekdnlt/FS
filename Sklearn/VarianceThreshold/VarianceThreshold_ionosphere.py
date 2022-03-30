@@ -14,6 +14,7 @@ label = pd.DataFrame(train[34])
 label = label.values
 label = label.ravel()
 value = np.delete(np.array(train), 34, axis=1)
+value = np.delete(value, 1, axis=1)
 value = pd.DataFrame(value)
 print(label.shape)
 print(value.shape)
