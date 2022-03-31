@@ -12,7 +12,6 @@ train = pd.read_csv("../../DataSet/arrhythmia.csv", header=None)
 
 imputer = SimpleImputer(strategy="mean")
 train = pd.DataFrame(imputer.fit_transform(train))
-''''''
 label = np.array(train[279])
 value = np.delete(np.array(train), 279, axis=1)
 print(label)
