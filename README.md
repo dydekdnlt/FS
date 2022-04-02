@@ -35,3 +35,5 @@ std_K_Means.py : 각 피처의 표준편차를 구한 뒤 FS를 적용 후 시�
 Tabu_K_Means.py : FS에 Tabu Search 알고리즘을 적용 후 시각화하는 파일입니다.
 
 모든 파일은 Silhouette Score를 사용하여 FS를 진행합니다. 
+
+[![Hits](https://hits.sh/github.com/dydekdnlt/FS.svg?view=today-total&style=plastic)](https://hits.sh/github.com/dydekdnlt/FS/)
