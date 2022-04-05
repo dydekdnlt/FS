@@ -34,7 +34,7 @@ def Argmax_List(x):
 
 
 for i in range(33):
-    print("상호 정보 test : ", Mutual_Info_Score(i))
+    print("Mutual Information", i, Mutual_Info_Score(i))
     Score_List.append(Mutual_Info_Score(i))
 
 print(Score_List)

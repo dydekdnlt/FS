@@ -36,7 +36,7 @@ def Argmax_List(x):
 
 
 for i in range(1024):
-    print("상호 정보 test : ", Mutual_Info_Score(i))
+    print("Mutual Information", i, Mutual_Info_Score(i))
     Score_List.append(Mutual_Info_Score(i))
 
 print(Score_List)
@@ -76,7 +76,6 @@ new_subFeature = np.array(new_subFeature)
 new_subFeature = pd.DataFrame(new_subFeature)
 
 print(new_subFeature)
-
 
 new_clf = KNeighborsClassifier(n_neighbors=3)
 new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_subFeature, label, test_size=0.25)
