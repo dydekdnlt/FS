@@ -24,10 +24,9 @@ from sklearn.impute import SimpleImputer
 warnings.filterwarnings(action='ignore')
 
 start = time.time()
-train = pd.read_csv("../../DataSet/ionosphere.csv", header=None)
-label = np.array(train[34])
-value = np.delete(np.array(train), 34, axis=1)
-value = np.delete(value, 1, axis=1)
+train = pd.read_csv("../../DataSet/spambase.csv", header=None)
+label = np.array(train[57])
+value = np.delete(np.array(train), 57, axis=1)
 
 n_sample, n_feature = value.shape
 
@@ -105,8 +104,8 @@ def feature_ranking(W):
 
 X = construct_W(value, **kwargs)
 
-num_fea = 15
-num_cluster = 2
+num_fea = 24
+num_cluster = 14
 
 Weight = mcfs(value, n_selected_features=num_fea, W=X, n_cluster=num_cluster)
 

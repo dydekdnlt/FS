@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 import time
 from sklearn.metrics import mutual_info_score
+from sklearn.impute import SimpleImputer
 import warnings
 import copy
 
@@ -13,13 +14,19 @@ warnings.filterwarnings(action='ignore')
 
 start = time.time()
 # 완료
-train = pd.read_csv("../../DataSet/madelon.csv", header=0, index_col=0)
-label = np.array(train['500'])
-value = np.delete(np.array(train), label, axis=1)
+train = pd.read_csv("../../DataSet/hepatitis.csv", header=None)
+imputer = SimpleImputer(strategy="mean")
+train = pd.DataFrame(imputer.fit_transform(train))
+label = np.array(train[0])
+value = np.delete(np.array(train), 0, axis=1)
 print(value.shape)
 Score_List = []
 lr = label.ravel()
 
+def calc_MI(x, y):
+    c_xy = np.histogram2d(x, y, 2)[0]
+    mi = mutual_info_score(None, None, contingency=c_xy)
+    return mi
 
 def Mutual_Info_Score(x):
     A = mutual_info_score(pd.DataFrame(value).iloc[:, x], lr)
@@ -32,9 +39,11 @@ def Argmax_List(x):
     return A_index
 
 
-for i in range(499):
-    print("Mutual Information", i, Mutual_Info_Score(i))
-    Score_List.append(Mutual_Info_Score(i))
+for i in range(19):
+    #print("Mutual Information", i, Mutual_Info_Score(i))
+    print("Mutual Information", i, calc_MI(pd.DataFrame(value).iloc[:, i], lr))
+    #Score_List.append(Mutual_Info_Score(i))
+    Score_List.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr))
 
 print(Score_List)
 print(Argmax_List(Score_List))
@@ -46,7 +55,7 @@ value = np.delete(value, Argmax_List(Score_List), axis=1)
 new_value = copy.copy(value)
 print(subFeature.shape)
 K = 1
-while K < 40:
+while K < 6:
     next_score_list = []
     new_subFeature = np.array(new_subFeature)
     new_subFeature = pd.DataFrame(new_subFeature)
@@ -54,9 +63,10 @@ while K < 40:
         another_score_list = []
         for j in range(K):
             another_score_list.append(
-                mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+                calc_MI(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+                # mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
 
-        next_score_list.append(Mutual_Info_Score(i) - ((1 / K) * sum(another_score_list)))
+        next_score_list.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr) - ((1 / K) * sum(another_score_list)))
     print(i, next_score_list)
     print(next_score_list.index(max(next_score_list)))
     new_subFeature = pd.concat(
@@ -70,8 +80,7 @@ while K < 40:
     print("new_subFeature shape : ", new_subFeature.shape)
     print("new_value shape : ", new_value.shape)
 
-
-# print(new_subFeature)
+print(new_subFeature)
 new_subFeature = np.array(new_subFeature)
 new_subFeature = pd.DataFrame(new_subFeature)
 

@@ -19,16 +19,16 @@ from scipy.sparse import *
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 import time
+from sklearn.impute import SimpleImputer
+
+warnings.filterwarnings(action='ignore')
 
 start = time.time()
-
-mat_file_name = "../../DataSet/Yale_64x64.mat"
-mat_file = scipy.io.loadmat(mat_file_name)
-mat_file_value = mat_file["fea"]  # 패턴
-mat_file_label = mat_file["gnd"]  # 레이블
-mat_file_value = mat_file_value.astype(float)
-value = np.array(mat_file_value)
-label = np.array(mat_file_label)
+train = pd.read_csv("../../DataSet/arrhythmia.csv", header=None)
+imputer = SimpleImputer(strategy="mean")
+train = pd.DataFrame(imputer.fit_transform(train))
+label = np.array(train[279])
+value = np.delete(np.array(train), 279, axis=1)
 
 n_sample, n_feature = value.shape
 
@@ -104,26 +104,26 @@ def feature_ranking(W):
     return idx
 
 
-X = construct_W(mat_file_value, **kwargs)
+X = construct_W(value, **kwargs)
 
-num_fea = 400
-num_cluster = 20
+num_fea = 20
+num_cluster = 13
 
-Weight = mcfs(mat_file_value, n_selected_features=num_fea, W=X, n_cluster=20)
+Weight = mcfs(value, n_selected_features=num_fea, W=X, n_cluster=num_cluster)
 
 idx = feature_ranking(Weight)
 
-selected_features = mat_file_value[:, idx[0:num_fea]]
+selected_features = value[:, idx[0:num_fea]]
 print("MCFS")
 print(selected_features)
 new_selected_features = pd.DataFrame(selected_features)
-new_mat_file_value = pd.DataFrame(mat_file_value)
+new_mat_file_value = pd.DataFrame(value)
 print(new_mat_file_value)
 print(new_selected_features)
 # 고유 문제 해결 후 > LARs 알고리즘 사용 > MCFS 점수 순 나열
 
 new_clf = KNeighborsClassifier(n_neighbors=3)
-new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_selected_features, mat_file_label,
+new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_selected_features, label,
                                                                     test_size=0.25)
 new_scores = cross_val_score(new_clf, new_X_train, new_Y_train.ravel(), cv=2)
 print("new score : ", new_scores)
@@ -137,4 +137,3 @@ print(minScore)
 
 end = time.time()
 print(f"{end - start: .2f} sec")
-

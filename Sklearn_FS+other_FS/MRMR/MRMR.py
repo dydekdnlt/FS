@@ -8,18 +8,26 @@ import time
 from sklearn.metrics import mutual_info_score
 import warnings
 import copy
+import scipy.io
 
 warnings.filterwarnings(action='ignore')
 
 start = time.time()
 # 완료
-train = pd.read_csv("../../DataSet/ionosphere.csv", header=None)
-label = np.array(train[34])
-value = np.delete(np.array(train), 34, axis=1)
-value = np.delete(value, 1, axis=1)
-print(value.shape)
+mat_file_name = "../../DataSet/YaleB_32x32.mat"
+mat_file = scipy.io.loadmat(mat_file_name)
+mat_file_value = mat_file["fea"] # 패턴
+mat_file_label = mat_file["gnd"] # 레이블
+value = np.array(mat_file_value)
+label = np.array(mat_file_label)
 Score_List = []
 lr = label.ravel()
+
+
+def calc_MI(x, y):
+    c_xy = np.histogram2d(x, y, 2)[0]
+    mi = mutual_info_score(None, None, contingency=c_xy)
+    return mi
 
 
 def Mutual_Info_Score(x):
@@ -33,9 +41,11 @@ def Argmax_List(x):
     return A_index
 
 
-for i in range(33):
-    print("Mutual Information", i, Mutual_Info_Score(i))
-    Score_List.append(Mutual_Info_Score(i))
+for i in range(1024):
+    # print("Mutual Information", i, Mutual_Info_Score(i))
+    print("Mutual Information", i, calc_MI(pd.DataFrame(value).iloc[:, i], lr))
+    # Score_List.append(Mutual_Info_Score(i))
+    Score_List.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr))
 
 print(Score_List)
 print(Argmax_List(Score_List))
@@ -47,7 +57,7 @@ value = np.delete(value, Argmax_List(Score_List), axis=1)
 new_value = copy.copy(value)
 print(subFeature.shape)
 K = 1
-while K < 15:
+while K < 100:
     next_score_list = []
     new_subFeature = np.array(new_subFeature)
     new_subFeature = pd.DataFrame(new_subFeature)
@@ -55,13 +65,14 @@ while K < 15:
         another_score_list = []
         for j in range(K):
             another_score_list.append(
-                mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+                calc_MI(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+                # mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
 
-        next_score_list.append(Mutual_Info_Score(i) - ((1 / K) * sum(another_score_list)))
+        next_score_list.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr) - ((1 / K) * sum(another_score_list)))
+
     print(i, next_score_list)
     print(next_score_list.index(max(next_score_list)))
-    new_subFeature = pd.concat(
-        [new_subFeature, pd.DataFrame(new_value).iloc[:, next_score_list.index(max(next_score_list))]], axis=1)
+    new_subFeature = pd.concat([new_subFeature, pd.DataFrame(new_value).iloc[:, next_score_list.index(max(next_score_list))]], axis=1)
     # print(max(next_score_list))
     # subFeature = np.concatenate((subFeature, pd.DataFrame(value).iloc[:, next_score_list.index(max(next_score_list))]), axis=1)
     # subFeature = subFeature.assign(pd.DataFrame(value).iloc[:, next_score_list.index(max(next_score_list))])
@@ -76,7 +87,6 @@ new_subFeature = np.array(new_subFeature)
 new_subFeature = pd.DataFrame(new_subFeature)
 
 print(new_subFeature)
-
 
 new_clf = KNeighborsClassifier(n_neighbors=3)
 new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_subFeature, label, test_size=0.25)

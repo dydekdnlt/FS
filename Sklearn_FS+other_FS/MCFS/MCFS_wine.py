@@ -24,9 +24,7 @@ from sklearn.impute import SimpleImputer
 warnings.filterwarnings(action='ignore')
 
 start = time.time()
-train = pd.read_csv("../../DataSet/hepatitis.csv", header=None)
-imputer = SimpleImputer(strategy="mean")
-train = pd.DataFrame(imputer.fit_transform(train))
+train = pd.read_csv("../../DataSet/wine.csv", header=None)
 label = np.array(train[0])
 value = np.delete(np.array(train), 0, axis=1)
 
@@ -79,10 +77,12 @@ def mcfs(X, n_selected_features, **kwargs):
 
     eigen_value, ul = scipy.linalg.eigh(a=W)
     print("eigen_value : ", eigen_value)
+    print(eigen_value.shape)
     print("ul : ", ul)
     print(ul.shape)
     Y = np.dot(W_norm, ul[:, -1 * n_cluster - 1:-1])
-    print(Y.shape)
+    print("Y_shape : ", Y.shape)
+    print("Y : ", Y)
 
     n_sample, n_feature = X.shape
     W = np.zeros((n_feature, n_cluster))
@@ -91,7 +91,7 @@ def mcfs(X, n_selected_features, **kwargs):
         clf = linear_model.Lars(normalize=False, n_nonzero_coefs=n_selected_features)
         clf.fit(X, Y[:, i])
         W[:, i] = clf.coef_
-        print(clf.coef_)
+        print("clf.coef : ", clf.coef_)
 
     return W
 
@@ -107,7 +107,7 @@ def feature_ranking(W):
 X = construct_W(value, **kwargs)
 
 num_fea = 6
-num_cluster = 2
+num_cluster = 7
 
 Weight = mcfs(value, n_selected_features=num_fea, W=X, n_cluster=num_cluster)
 

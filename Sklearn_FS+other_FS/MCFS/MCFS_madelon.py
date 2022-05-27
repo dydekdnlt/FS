@@ -105,7 +105,7 @@ def feature_ranking(W):
 X = construct_W(value, **kwargs)
 
 num_fea = 40
-num_cluster = 2
+num_cluster = 15
 
 Weight = mcfs(value, n_selected_features=num_fea, W=X, n_cluster=num_cluster)
 

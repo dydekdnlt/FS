@@ -21,6 +21,13 @@ Score_List = []
 lr = label.ravel()
 
 
+def calc_MI(x, y):
+    c_xy = np.histogram2d(x, y, 2)[0]
+
+    mi = mutual_info_score(None, None, contingency=c_xy)
+    return mi
+
+
 def Mutual_Info_Score(x):
     A = mutual_info_score(pd.DataFrame(value).iloc[:, x], lr)
     return A
@@ -33,8 +40,10 @@ def Argmax_List(x):
 
 
 for i in range(13):
-    print("Mutual Information", i, Mutual_Info_Score(i))
-    Score_List.append(Mutual_Info_Score(i))
+    # print("Mutual Information", i, Mutual_Info_Score(i))
+    print("Mutual Information", i, calc_MI(pd.DataFrame(value).iloc[:, i], lr))
+    # Score_List.append(Mutual_Info_Score(i))
+    Score_List.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr))
 
 print(Score_List)
 print(Argmax_List(Score_List))
@@ -53,9 +62,11 @@ while K < 6:
     for i in range(len(pd.DataFrame(new_value[0]))):
         another_score_list = []
         for j in range(K):
-            another_score_list.append(mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+            another_score_list.append(
+                calc_MI(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
+                # mutual_info_score(pd.DataFrame(new_value).iloc[:, i], pd.DataFrame(new_subFeature).iloc[:, j]))
 
-        next_score_list.append(Mutual_Info_Score(i) - ((1/K)*sum(another_score_list)))
+        next_score_list.append(calc_MI(pd.DataFrame(value).iloc[:, i], lr) - ((1 / K) * sum(another_score_list)))
     print(i, next_score_list)
     print(next_score_list.index(max(next_score_list)))
     new_subFeature = pd.concat([new_subFeature, pd.DataFrame(new_value).iloc[:, next_score_list.index(max(next_score_list))]], axis=1)
@@ -76,7 +87,7 @@ print(new_subFeature)
 
 
 new_clf = KNeighborsClassifier(n_neighbors=3)
-new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_subFeature, label, test_size=0.25)
+new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(new_subFeature, label, test_size=0.50)
 new_scores = cross_val_score(new_clf, new_X_train, new_Y_train.ravel(), cv=2)
 print("new score : ", new_scores)
 print("new mean accuracy of validation : ", np.mean(new_scores))
