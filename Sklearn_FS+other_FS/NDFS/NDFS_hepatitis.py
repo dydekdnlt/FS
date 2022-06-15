@@ -6,9 +6,12 @@ import pandas as pd
 from sklearn.metrics import pairwise_distances, accuracy_score
 import time
 from sklearn.cluster import SpectralClustering
+from sklearn.impute import SimpleImputer
 
 start = time.time()
-train = pd.read_csv("../DataSet/wine.csv", header=None)
+train = pd.read_csv("../../DataSet/hepatitis.csv", header=None)
+imputer = SimpleImputer(strategy="mean")
+train = pd.DataFrame(imputer.fit_transform(train))
 label = np.array(train[0])
 X = np.delete(np.array(train), 0, axis=1)
 n_sample, n_feature = X.shape
@@ -98,6 +101,6 @@ new_Y_pred = new_clf.predict(new_X_test)
 print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
-print("LS 스코어 : ", minScore)
+print("NDFS 스코어 : ", minScore)
 end = time.time()
 print(f"{end - start: .5f} sec")

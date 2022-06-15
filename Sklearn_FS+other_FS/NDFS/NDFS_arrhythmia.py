@@ -6,17 +6,20 @@ import pandas as pd
 from sklearn.metrics import pairwise_distances, accuracy_score
 import time
 from sklearn.cluster import SpectralClustering
+from sklearn.impute import SimpleImputer
 
 start = time.time()
-train = pd.read_csv("../DataSet/wine.csv", header=None)
-label = np.array(train[0])
-X = np.delete(np.array(train), 0, axis=1)
+train = pd.read_csv("../../DataSet/arrhythmia.csv", header=None)
+imputer = SimpleImputer(strategy="mean")
+train = pd.DataFrame(imputer.fit_transform(train))
+label = np.array(train[279])
+X = np.delete(np.array(train), 279, axis=1)
 n_sample, n_feature = X.shape
 
-cluster = 3
-select_f = 6
-p = 10 # 가중치 행렬 W 구성에 필요한 파라미터
-alpha, beta, gamma = 1, 1, 1
+cluster = 5
+select_f = 20
+p = 1000 # 가중치 행렬 W 구성에 필요한 파라미터
+alpha, beta, gamma = 1, 2, 1
 
 knn_graph = kneighbors_graph(X, cluster)
 distance = pairwise_distances(X)
@@ -41,15 +44,17 @@ for i in range(n_sample):
 one = np.ones(n_sample)
 
 Diag = np.diag(W @ one.T)
-
+print(Diag)
 L = Diag - W
 
 pd_L = pd.DataFrame(L)
 
 I = np.identity(n_sample)
 D = np.identity(n_feature)
-M = L + alpha * (I - X @ np.linalg.inv((X.T @ X) + (beta * D)) @ X.T)
+print("test")
+test = (X.T @ X) + (beta * D)
 
+M = L + alpha * (I - X @ np.linalg.inv((X.T @ X) + (beta * D)) @ X.T)
 for i in range(n_sample):
     for j in range(cluster):
         F[i][j] = gamma * F[i][j] / (M @ F + gamma * (F @ F.T @ F))[i][j]
@@ -98,6 +103,6 @@ new_Y_pred = new_clf.predict(new_X_test)
 print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
-print("LS 스코어 : ", minScore)
+print("NDFS 스코어 : ", minScore)
 end = time.time()
 print(f"{end - start: .5f} sec")

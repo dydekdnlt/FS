@@ -6,15 +6,20 @@ import pandas as pd
 from sklearn.metrics import pairwise_distances, accuracy_score
 import time
 from sklearn.cluster import SpectralClustering
+import scipy.io
 
 start = time.time()
-train = pd.read_csv("../DataSet/wine.csv", header=None)
-label = np.array(train[0])
-X = np.delete(np.array(train), 0, axis=1)
+mat_file_name = "../../DataSet/ORL_32x32.mat"
+mat_file = scipy.io.loadmat(mat_file_name)
+mat_file_value = mat_file["fea"]  # 패턴
+mat_file_label = mat_file["gnd"]  # 레이블
+mat_file_value = mat_file_value.astype(float)
+X = np.array(mat_file_value)
+label = np.array(mat_file_label)
 n_sample, n_feature = X.shape
 
-cluster = 3
-select_f = 6
+cluster = 10
+select_f = 100
 p = 10 # 가중치 행렬 W 구성에 필요한 파라미터
 alpha, beta, gamma = 1, 1, 1
 
@@ -98,6 +103,6 @@ new_Y_pred = new_clf.predict(new_X_test)
 print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
-print("LS 스코어 : ", minScore)
+print("NDFS 스코어 : ", minScore)
 end = time.time()
 print(f"{end - start: .5f} sec")

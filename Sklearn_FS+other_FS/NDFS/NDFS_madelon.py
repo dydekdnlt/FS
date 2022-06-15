@@ -8,14 +8,14 @@ import time
 from sklearn.cluster import SpectralClustering
 
 start = time.time()
-train = pd.read_csv("../DataSet/wine.csv", header=None)
-label = np.array(train[0])
-X = np.delete(np.array(train), 0, axis=1)
+train = pd.read_csv("../../DataSet/madelon.csv", header=0, index_col=0)
+label = np.array(train['500'])
+X = np.delete(np.array(train), label, axis=1)
 n_sample, n_feature = X.shape
 
 cluster = 3
-select_f = 6
-p = 10 # 가중치 행렬 W 구성에 필요한 파라미터
+select_f = 40
+p = 1000 # 가중치 행렬 W 구성에 필요한 파라미터
 alpha, beta, gamma = 1, 1, 1
 
 knn_graph = kneighbors_graph(X, cluster)
@@ -98,6 +98,6 @@ new_Y_pred = new_clf.predict(new_X_test)
 print(new_Y_pred)
 print(new_Y_test.ravel())
 minScore = 1 - accuracy_score(new_Y_test.ravel(), new_Y_pred)
-print("LS 스코어 : ", minScore)
+print("NDFS 스코어 : ", minScore)
 end = time.time()
 print(f"{end - start: .5f} sec")
