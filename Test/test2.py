@@ -1,132 +1,79 @@
+import matplotlib
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 import pandas as pd
-import plotly.express as px
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rc
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
-from sklearn.metrics import silhouette_score
-import random
-import scipy.io
-mat_file_name = "../DataSet/YaleB_32x32.mat"
-mat_file = scipy.io.loadmat(mat_file_name)
+import numpy.linalg
+import skfuzzy as fuzz
+from scipy.sparse.linalg import svds
+from sklearn.decomposition import NMF
+from sklearn.metrics import mean_absolute_error
 
-print(type(mat_file))
+movies = pd.read_csv('C:/Users/ForYou/Desktop/ml-1m/movies.csv')
+ratings = pd.read_csv('C:/Users/ForYou/Desktop/ml-1m/ratings.csv')
 
-for i in mat_file:
-    print(i)
+rating_movies = pd.merge(ratings, movies, on='MovieID')
 
-mat_file_value = mat_file["fea"]
-print(len(mat_file_value), len(mat_file_value[0]))
-print(mat_file_value)
+ratings_matrix = rating_movies.pivot_table('rating', index='UserID', columns='title')
+ratings_matrix.fillna(0, inplace=True)
+ratings_matrix_T = ratings_matrix.transpose()
 
-'''
-train = pd.read_csv("C:\\Users\\용다윗\\Desktop\\perfume_data.csv")
-# print(train)
+cluster = 10
+kmeans = KMeans(n_clusters=cluster, random_state=0)
+X = kmeans.fit_predict(ratings_matrix_T)
 
-train_row = train[['name']]
-col_name = ['1', '2', '3', '4', '5',
-            '6', '7', '8', '9', '10',
-            '11', '12', '13', '14', '15',
-            '16', '17', '18', '19', '20',
-            '21', '22', '23', '24', '25', '26', '27', '28']
-train_col = train[col_name]
-'''
+print(kmeans.labels_)
+cntr, u, u0, d, _, _, _ = fuzz.cluster.cmeans(ratings_matrix, cluster, 2, error=0.005, maxiter=1000, init=None)
+print("train", ratings_matrix_T.shape, sep='\n')
+print("Fuzzy 클러스터 별 속할 가능성", u, sep='\n')
+print("K-means 클러스터 레이블", X, sep='\n')
 
-col_name = mat_file_value[0]
-print(col_name)
-new_mat_file_value = pd.DataFrame(mat_file_value)
-print(new_mat_file_value)
-std_list = []
-sort_std_list = []
-print(new_mat_file_value[0])
-print(len(new_mat_file_value[0]))
-for i in range(1024):
-    std_list.append(np.std(new_mat_file_value[i]))
+print(type(ratings_matrix_T))
+U, sigma, V = svds(ratings_matrix_T.to_numpy(), k=cluster)
+# U, sigma, V = np.linalg.svd(ratings_matrix_T)
+a, b = U.shape
+np_sigma = np.zeros((b, b))
 
-sort_std_list.append(sorted(std_list))
+print("U", U.shape, sep='\n')
+print("sigma", sigma.shape, sep='\n')
+print(sigma)
+print("V", V.shape, sep='\n')
 
-print("표준 편차 : ", std_list)
+for i in range(len(sigma)):
+    np_sigma[i][i] = sigma[i]
 
-new_B = sort_std_list[0]
-new_B.sort(reverse=True)
-print("내림차순 정렬된 표준 편차 : ", new_B)
-print()
-print()
-high_count = 0
-high_score = 0
-first_score = 0
-high_score_list = []
-high_final_list = []
-count = 1
-while count < 501:
-    final_list = []
+print("np_sigma", np_sigma.shape)
 
-    for i in range(count):
+test_svd = U @ np_sigma
+print("test_svd", test_svd.shape)
+cntr2, u2, _, _, _, _, _ = fuzz.cluster.cmeans(test_svd.T, cluster, 2, error=0.005, maxiter=1000, init=None)
+print("u2", u2)
+print("원본 행렬의 k-means 클러스터 레이블", X, sep='\n')
 
-        final_list.append(std_list.index(new_B[i]))
+kmeans_test_svd = kmeans.fit_predict(test_svd)
 
-    new_train_col = new_mat_file_value.iloc[:, final_list]
+nmf = NMF(n_components=cluster)
+W = nmf.fit_transform(ratings_matrix_T)
+print("W 확인", W.shape)
 
-    #print(new_train_col)
+print("Truncated SVD 행렬의 k-means 클러스터 레이블", kmeans_test_svd, sep='\n')
+pca = PCA(n_components=2)
+pca_tra = pca.fit_transform(ratings_matrix_T)
+pca_tra2 = pca.fit_transform(test_svd)
+pca_tra3 = pca.fit_transform(W)
 
-    scaler = MinMaxScaler()
-
-    scaler.fit_transform(new_train_col)
-
-    A = new_train_col.to_numpy()
-
-    #print(A)
-
-    km = KMeans(n_clusters=3)
-    km.fit(A)
-    centers = km.cluster_centers_
-    #print(km.labels_)
-    #print(km.cluster_centers_)
-    Cluster = A.copy()
-    clusters = km.predict(A)
-    score = silhouette_score(A, clusters)
-    new_km_labels = pd.DataFrame(km.labels_)
-    #print(new_km_labels)
-    print("피처의 수 :", count, "-", score)
-    if score > high_score:
-        high_final_list = final_list
-        high_score = score
-        high_score_list = A
-        high_count = count
-    if count == 28:
-        first_score = score
-    count += 1
-print("초기 데이터셋 점수 :", first_score) # 초기 데이터셋 점수
-print("가장 높은 점수 :", high_score) # 가장 높은 점수
-print("선택된 피처 인덱스 :", high_final_list) # 선택된 피처 인덱스
-#print(high_score_list) # 가장 높은 점수의 데이터셋
-#print("점수 증가율 :", (high_score - first_score) / first_score * 100)
-if len(high_final_list) == 1:
-    km = KMeans(n_clusters=3)
-    new_train_col = new_mat_file_value.iloc[:, high_final_list]
-    km.fit(new_train_col)
-    print(new_train_col)
-    sns.scatterplot(x=new_mat_file_value.iloc[:, 0], y=new_train_col.iloc[:, 0], c=km.labels_)
-    plt.xlabel('')
-    plt.show()
-else:
-    km = KMeans(n_clusters=3)
-    km.fit(high_score_list)
-    centers = km.cluster_centers_
-    #print(km.labels_)
-    #print(km.cluster_centers_)
-    Cluster = high_score_list.copy()
-    X = Cluster
-
-    pca = PCA(n_components=2)
-    pca_tra = pca.fit_transform(X)
-    #print(pca_tra)
-    #new_pca_tra = pd.DataFrame(pca_tra)
-
-    sns.scatterplot(x=X[:,0], y=X[:, 1], c=km.labels_)
-
-    #sns.scatterplot(x=pca_tra[:, 0], y=pca_tra[:, 1], c=km.labels_, data=pca_tra)
-    #sns.pairplot(new_X)
-    plt.show()
+#plt.bar(x, score_list[0])
+#plt.xticks(x, column_name)
+fig, (ax1, ax2, ax3) = plt.subplots(figsize=(9, 4), ncols=3)
+ax1.scatter(x=pca_tra[:, 0], y=pca_tra[:, 1], c=X)
+ax2.scatter(x=pca_tra2[:, 0], y=pca_tra2[:, 1], c=X)
+ax3.scatter(x=pca_tra3[:, 0], y=pca_tra3[:, 1], c=X)
+ax1.set_title('원본 행렬의 k-means')
+ax2.set_title("Truncated SVD 행렬의 k-means")
+ax3.set_title("NMF")
+# sns.scatterplot(x=pca_tra[:, 0], y=pca_tra[:, 1], c=kmeans.labels_)
+plt.show()
+# 열 기준 X, 행 기준으로 다시 구성

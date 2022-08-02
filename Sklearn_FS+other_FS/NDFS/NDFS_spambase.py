@@ -15,8 +15,8 @@ n_sample, n_feature = X.shape
 
 cluster = 3
 select_f = 24
-p = 10 # 가중치 행렬 W 구성에 필요한 파라미터
-alpha, beta, gamma = 1, 1, 1
+p = 100 # 가중치 행렬 W 구성에 필요한 파라미터
+alpha, beta, gamma = 1, 1, 10**8
 
 knn_graph = kneighbors_graph(X, cluster)
 distance = pairwise_distances(X)
@@ -27,7 +27,7 @@ First_F = np.zeros([n_sample, cluster])
 for i in range(n_sample):
     First_F[i][clustering[i]] = 1
 F = First_F
-
+print(F)
 W = np.zeros([n_sample, n_sample])
 knn_graph = knn_graph.toarray()
 
@@ -36,8 +36,8 @@ DI = np.identity(n_sample)
 for i in range(n_sample):
     for j in range(n_sample):
         if knn_graph[i][j] == 1:
-            W[i][j] = np.exp(-((distance[i][j]**2)/p))
-
+            W[i][j] = np.exp(-((distance[i][j]**2)/p**2))
+    print(W, i)
 one = np.ones(n_sample)
 
 Diag = np.diag(W @ one.T)
@@ -62,14 +62,15 @@ for i in range(n_feature):
 
 for i in range(30):
     M = L + alpha * (I - X @ np.linalg.inv((X.T @ X) + (beta * D)) @ X.T)
+    test_F = (gamma * F) / (M @ F + gamma * (F @ F.T @ F))
     for j in range(n_sample):
         for k in range(cluster):
-            F[j][k] = gamma * F[j][k] / (M @ F + gamma * (F @ F.T @ F))[j][k]
+            F[j][k] = F[j][k] * test_F[j][k]
     W = np.linalg.inv(X.T @ X + beta * D) @ X.T @ F
     for l in range(n_feature):
         a = 1 / 2 * np.linalg.norm(W[l])
         D[l][l] = a
-
+    print(D, i)
 W_Distance = []
 for i in range(n_feature):
     W_Distance.append(D[i][i])

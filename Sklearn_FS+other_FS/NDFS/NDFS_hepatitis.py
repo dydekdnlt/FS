@@ -65,13 +65,15 @@ for i in range(n_feature):
 
 for i in range(30):
     M = L + alpha * (I - X @ np.linalg.inv((X.T @ X) + (beta * D)) @ X.T)
+    test_F = (gamma * F) / (M @ F + gamma * (F @ F.T @ F))
     for j in range(n_sample):
         for k in range(cluster):
-            F[j][k] = gamma * F[j][k] / (M @ F + gamma * (F @ F.T @ F))[j][k]
+            F[j][k] = F[j][k] * test_F[j][k]
     W = np.linalg.inv(X.T @ X + beta * D) @ X.T @ F
     for l in range(n_feature):
         a = 1 / 2 * np.linalg.norm(W[l])
         D[l][l] = a
+    print(D, i)
 
 W_Distance = []
 for i in range(n_feature):

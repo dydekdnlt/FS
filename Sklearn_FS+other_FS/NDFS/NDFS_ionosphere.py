@@ -17,7 +17,7 @@ n_sample, n_feature = X.shape
 cluster = 3
 select_f = 15
 p = 10 # 가중치 행렬 W 구성에 필요한 파라미터
-alpha, beta, gamma = 1, 1, 1
+alpha, beta, gamma = 1, 1, 10**8
 
 knn_graph = kneighbors_graph(X, cluster)
 distance = pairwise_distances(X)
@@ -63,13 +63,15 @@ for i in range(n_feature):
 
 for i in range(30):
     M = L + alpha * (I - X @ np.linalg.inv((X.T @ X) + (beta * D)) @ X.T)
+    test_F = (gamma * F) / (M @ F + gamma * (F @ F.T @ F))
     for j in range(n_sample):
         for k in range(cluster):
-            F[j][k] = gamma * F[j][k] / (M @ F + gamma * (F @ F.T @ F))[j][k]
+            F[j][k] = F[j][k] * test_F[j][k]
     W = np.linalg.inv(X.T @ X + beta * D) @ X.T @ F
     for l in range(n_feature):
         a = 1 / 2 * np.linalg.norm(W[l])
         D[l][l] = a
+    print(D, i)
 
 W_Distance = []
 for i in range(n_feature):

@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 from sklearn.metrics import silhouette_score
 
-train = pd.read_csv("C:\\Users\\용다윗\\Desktop\\hcvdat0.csv")
+train = pd.read_csv("../DataSet/hcvdat0.csv")
 # print(train)
 
 train_row = train[['User']]
@@ -48,4 +48,4 @@ new_pca_tra = pd.DataFrame(pca_tra)
 sns.scatterplot(x=pca_tra[:, 0], y=pca_tra[:, 1], c=km.labels_, data=pca_tra)
 # sns.pairplot(new_X)
 # sns.pairplot(new_pca_tra)
-#plt.show()
+plt.show()

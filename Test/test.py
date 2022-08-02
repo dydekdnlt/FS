@@ -1,76 +1,45 @@
-import numpy as np
-import matplotlib.pylab as plt
-import scipy.io
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 import pandas as pd
-import plotly.express as px
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler
-import seaborn as sns
-from sklearn.metrics import silhouette_score
-from timeit import default_timer as timer
-from datetime import timedelta
-start = timer()
-mat_file_name = "../DataSet/Yale_64x64.mat"
-mat_file = scipy.io.loadmat(mat_file_name)
+import numpy as np
+import warnings;
 
-print(type(mat_file))
+warnings.filterwarnings('ignore')
 
-for i in mat_file:
-    print(i)
+movies = pd.read_csv('C:/Users/ForYou/Desktop/ml-25m/movies.csv')
+ratings = pd.read_csv('C:/Users/ForYou/Desktop/ml-25m/ratings.csv')
 
-mat_file_value = mat_file["fea"]
-print(len(mat_file_value), len(mat_file_value[0]))
-print(mat_file_value)
+print(movies.shape, ratings.shape)
 
-scaler = MinMaxScaler()
+print(movies.head(2))
+print(ratings.head(2))
 
-scaler.fit_transform(mat_file_value)
-'''
-k_range = range(2, 40)
+ratings = ratings.truncate(before=0, after=1000000, axis=0)
 
-best_n = -1
-best_silhouette_score = -1
+print(movies.shape, ratings.shape)
 
-for k in k_range:
-    km = KMeans(n_clusters=k)
-    km.fit(mat_file_value)
-    clusters = km.predict(mat_file_value)
+rating_movies = pd.merge(ratings, movies, on='movieId')
+print(rating_movies.head(2))
 
-    score = silhouette_score(mat_file_value, clusters)
-    print('k :', k, 'score :', score)
+ratings_matrix = rating_movies.pivot_table('rating', index='userId', columns='title')
+ratings_matrix.fillna(0, inplace=True)
+print(ratings_matrix.head(2))
 
-    if score > best_silhouette_score:
-        best_n = k
-        best_silhouette_score = score
+ratings_matrix_T = ratings_matrix.transpose()
 
-print('best n :', best_n, 'best score :', best_silhouette_score)
-'''
+print(ratings_matrix_T.head(2))
 
-# A = mat_file_value.to_numpy()
-km = KMeans(n_clusters=6)
-km.fit(mat_file_value)
-centers = km.cluster_centers_
-# print(km.labels_)
-# print(km.cluster_centers_)
+from sklearn.metrics.pairwise import cosine_similarity
 
-X = mat_file_value.copy()
-clusters = km.predict(mat_file_value)
-score = silhouette_score(mat_file_value, clusters)
-new_km_labels = pd.DataFrame(km.labels_)
-# print(new_km_labels)
-print(score)
+item_sim = cosine_similarity(ratings_matrix_T, ratings_matrix_T)
+item_sim_df = pd.DataFrame(data=item_sim, index=ratings_matrix.columns, columns=ratings_matrix.columns)
 
-end = timer()
-print(timedelta(seconds=end - start))
+print(item_sim_df.shape)
+print(item_sim_df.head(2))
 
-pca = PCA(n_components=2)
-pca_tra = pca.fit_transform(X)
-# print(pca_tra)
-new_pca_tra = pd.DataFrame(pca_tra)
-new_X = pd.DataFrame(X)
-#sns.scatterplot(x=X[:, 0], y=X[:, 1], c=km.labels_)
-sns.scatterplot(x=pca_tra[:, 0], y=pca_tra[:, 1], c=km.labels_)
-# sns.pairplot(new_X)
-plt.show()
+
+def find_sim_movie_item(df, title_name, top_n=10):
+    title_movie_sim = df[[title_name]].drop(title_name, axis=0)
+
+    return title_movie_sim.sort_values(title_name, ascending=False)[:top_n]
+
+
+print(find_sim_movie_item(item_sim_df, 'Godfather, The (1972)'))

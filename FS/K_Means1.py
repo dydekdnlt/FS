@@ -7,7 +7,8 @@ from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 from sklearn.metrics import silhouette_score
 
-train = pd.read_csv("C:\\Users\\용다윗\\Desktop\\google_review_ratings.csv", dtype=float)
+
+train = pd.read_csv("../DataSet/google_review_ratings.csv", dtype=float)
 # print(train)
 
 train_row = train[['User']]
@@ -44,6 +45,6 @@ pca_tra = pca.fit_transform(X)
 new_pca_tra = pd.DataFrame(pca_tra)
 new_X = pd.DataFrame(X)
 #sns.scatterplot(x=X[:, 0], y=X[:, 1], c=km.labels_)
-sns.scatterplot(x=pca_tra[:,0], y=pca_tra[:, 1], c=km.labels_)
-# sns.pairplot(new_X)
-#plt.show()
+#sns.scatterplot(x=pca_tra[:,0], y=pca_tra[:, 1], c=km.labels_)
+sns.pairplot(new_X)
+plt.show()
