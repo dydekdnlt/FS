@@ -78,7 +78,7 @@ for x in range(3, n_feature+1):
 
     kmeans = KMeans(n_clusters=cluster, random_state=0)
 
-    U, sigma, V = svds(df_numpy, k=cluster)
+    U, sigma, V = svds(selected_features, k=cluster)
     a, b = U.shape
     np_sigma = np.zeros((b, b))
 
@@ -115,4 +115,4 @@ for x in range(3, n_feature+1):
         i_accuracy.append(minScore)
     test_accuracy.append(sum(i_accuracy)/len(i_accuracy))
     # print(i_accuracy, len(i_accuracy))
-print(test_accuracy, len(test_accuracy))
+print(test_accuracy, len(test_accuracy), test_accuracy.index(max(test_accuracy))+cluster+1)

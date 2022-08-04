@@ -65,7 +65,7 @@ AA = sorted(score_list)
 
 #print(AA, len(AA))
 test_accuracy = []
-for x in range(4, n_feature+1):
+for x in range(5, n_feature+1):
     select_f = x
     index_list = []
     i_accuracy = []
@@ -75,10 +75,10 @@ for x in range(4, n_feature+1):
     selected_features = df_numpy[:, index_list[0:]]
     # print(selected_features)
 
-    cluster = 3
+    cluster = 6
     kmeans = KMeans(n_clusters=cluster, random_state=0)
 
-    U, sigma, V = np.linalg.svd(df_numpy)
+    U, sigma, V = np.linalg.svd(selected_features)
     a, b = U.shape
     np_sigma = np.zeros((b, b))
 

@@ -64,12 +64,12 @@ AA = sorted(score_list)
 
 #print(AA, len(AA))
 test_accuracy = []
-for x in range(4, n_feature+1):
+for x in range(9, n_feature+1):
     select_f = x
     index_list = []
     i_accuracy = []
 
-    cluster = 3
+    cluster = 8
     for i in range(select_f):
         index_list.append(score_list.index(AA[i]))
     #print(index_list)

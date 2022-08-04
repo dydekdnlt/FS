@@ -66,11 +66,11 @@ AA = sorted(score_list)
 
 #print(AA, len(AA))
 test_accuracy = []
-for x in range(4, n_feature+1):
+for x in range(3, n_feature+1):
     select_f = x
     index_list = []
     i_accuracy = []
-    cluster = 3
+    cluster = 2
     for i in range(select_f):
         index_list.append(score_list.index(AA[i]))
     #print(index_list)
@@ -117,3 +117,4 @@ for x in range(4, n_feature+1):
     test_accuracy.append(sum(i_accuracy)/len(i_accuracy))
     # print(i_accuracy, len(i_accuracy))
 print(test_accuracy, len(test_accuracy))
+

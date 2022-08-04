@@ -90,7 +90,7 @@ for x in range(3, n_feature+1):
     #print(kmeans.labels_)
     for y in range(20):
         new_clf = KNeighborsClassifier(n_neighbors=3)
-        new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(df, label, test_size=0.20)
+        new_X_train, new_X_test, new_Y_train, new_Y_test = train_test_split(test_nmf, label, test_size=0.20)
         # new_scores = cross_val_score(new_clf, new_X_train, new_Y_train.ravel(), cv=5)
         #print("new score : ", new_scores)
         #print("new mean accuracy of validation : ", np.mean(new_scores))
@@ -113,4 +113,5 @@ for x in range(3, n_feature+1):
         i_accuracy.append(minScore)
     test_accuracy.append(sum(i_accuracy)/len(i_accuracy))
     # print(i_accuracy, len(i_accuracy))
-print(test_accuracy, len(test_accuracy))
+print(test_accuracy, len(test_accuracy), test_accuracy.index(max(test_accuracy))+cluster+1, max(test_accuracy))
+print(np.mean(test_accuracy))
