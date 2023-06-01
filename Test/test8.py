@@ -1,222 +1,103 @@
-import copy
-from timeit import default_timer as timer
-from datetime import timedelta
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
-import pandas as pd
-from sklearn.decomposition import PCA
-import seaborn as sns
-from sklearn.metrics import silhouette_score
-import random
-import scipy.io
-from sklearn.feature_selection import SequentialFeatureSelector
-from sklearn.neighbors import KNeighborsClassifier
-import plotly.express as px
-start = timer()
-mat_file_name = "../DataSet/Yale_64x64.mat"
-mat_file = scipy.io.loadmat(mat_file_name)
-mat_file_value = mat_file["fea"]
-new_mat_file_value = pd.DataFrame(mat_file_value)
+from PIL import Image
+import os
+import pickle
 
 
-km = KMeans(n_clusters=6)
-km.fit(new_mat_file_value)
-centers = km.cluster_centers_
-clusters = km.predict(new_mat_file_value)
-first_score = silhouette_score(new_mat_file_value, clusters)
+class SVD:
+    def get(self, A, compRate=0.5):
+        n = A.shape[0]
+        p = A.shape[1]
 
-Best_DataSet = []  # feature 데이터셋
-Best_Score = 0  # Silhouette score 생성
-Best_Feature_Index = []  # feature index 리스트
-Population = 50
-mutation = 0.02
-
-
-def Best10List(List): # 문제 수정
-
-    countList = [0 for __ in range(Population)]
-    countListIndex = []
-    AnotherList = []
-    for i in range(Population):
-        zerocount = 0
-        for j in range(4096):
-
-            if List[i][j] == 1:
-                zerocount += 1
-        countList[i] = zerocount
-    #print("Best 10 List 실험", countList)
-    print("평균값 : ", int(sum(countList)/Population))
-
-    for i in range(Population):
-        if countList[i] <= int(sum(countList)/Population):
-            countListIndex.append(i)
-    print(countListIndex)
-    print("countListIndex 길이 : ", len(countListIndex))
-    for i in range(Population):
-        if i in countListIndex:
-            AnotherList.append(List[i])
-    #print("AnotherList : ", AnotherList)
-    print("AnotherList 길이: ", len(AnotherList))
-    return AnotherList
+        U, s, VT = np.linalg.svd(A, full_matrices=False)
+        k = int(compRate * (n * p) / (n + 1 + p))
+        S = np.diag(s[:k])
+        B = np.dot(U[:, :k], np.dot(S, VT[:k, :]))
+        B = (255 * (B - np.min(B)) / np.ptp(B)).astype(np.uint8)
+        return B, U[:, :k], s[:k], VT[:k, :], k
 
 
-def randomList(list):
-    count = 2
-    if len(list) < count:
-        while True:
-            A = random.randint(0, 4095)
-            if A not in list:
-                list.append(A)
-            if len(list) == count:
-                break
-    elif len(list) > count:
-        while True:
-            list.remove(random.choice(list))
-            if len(list) == count:
-                break
-    else:
-        pass
-    return sorted(list)
+def unpickle(file):
+    with open(file, 'rb') as fo:
+        dict = pickle.load(fo, encoding='bytes')
+    return dict
 
 
-def evaluation(List):
-    global Best_Score, Best_DataSet, Best_Feature_Index
-    start1 = timer()
-    score_list = []
-    AnotherList = Best10List(List)
-    Feature_index = [[] for __ in range(len(AnotherList))]
-    for i in range(len(AnotherList)):
-        for j in range(4096):
-            if AnotherList[i][j] == 1:
-                Feature_index[i].append(j)
-    #print("의심 구간1 : ", Feature_index)
-    #print(len(Feature_index))
-    for i in range(len(Feature_index)):
-        Feature_index[i] = randomList(Feature_index[i])
+with open('./cifar-10-batches-py/batches.meta', 'rb') as infile:
+    data = pickle.load(infile, encoding='latin1')
+    classes = data['label_names']
 
-    #print("의심 구간2 : ", Feature_index)
-    #print(len(Feature_index))
-    for i in Feature_index:
-        #print("피처수 확인 : ", len(i))
-        if len(i) == 0:
-            print("1 없음")
-            #print(i)
-            continue
-        else:
-            new_train_col = new_mat_file_value.iloc[:, i]
-            km = KMeans(n_clusters=6)
-            km.fit(new_train_col)
-            clusters = km.predict(new_train_col)
-            score = silhouette_score(new_train_col, clusters)
-            score_list.append(score)
-            np_new_train_col = new_train_col.to_numpy()
+# 클래스 별 폴더 생성
+os.mkdir('./train_svd')
+os.mkdir('./test_svd')
+for name in classes:
+    os.mkdir('./train_svd/{}'.format(name))
+    os.mkdir('./test_svd/{}'.format(name))
+# Trainset Unpacking
+# data_batch 파일들 순서대로 unpacking
+for i in range(1, 6):
+    print('Unpacking Train File {}/{}'.format(i, 5))
+    train_file = unpickle('./cifar-10-batches-py/data_batch_{}'.format(i))
 
-            if score > Best_Score:
-                print(len(np_new_train_col[0]))  # 피처의 수 확인
-                Best_Score = score
-                print(Best_Score)
-                Best_DataSet = new_train_col
-                Best_Feature_Index = i
-    end1 = timer()
-    print("수정한 평가 메소드 소요시간 : ", timedelta(seconds=end1 - start1))
+    train_data = train_file[b'data']
 
-    return score_list
+    # 10000, 3072 -> 10000, 3, 32, 32 형태로 변환
+    train_data_reshape = np.vstack(train_data).reshape((-1, 3, 32, 32))
+    # 이미지 저장을 위해 10000, 32, 32, 3으로 변환
+    train_data_reshape = train_data_reshape.swapaxes(1, 3)
+    train_data_reshape = train_data_reshape.swapaxes(1, 2)
+    # 레이블 리스트 생성
+    train_labels = train_file[b'labels']
+    # 파일 이름 리스트 생성
+    train_filename = train_file[b'filenames']
+    model = SVD()
+    # 10000개의 파일을 순차적으로 저장
+    for idx in range(10000):
+        train_label = train_labels[idx]
+        train_image = Image.fromarray(train_data_reshape[idx])
+        print(train_image)
+        # 클래스 별 폴더에 파일 저장
+        R, _, _, _, _ = model.get(train_image[:, :, 0], 0.1)
+        G, _, _, _, _ = model.get(train_image[:, :, 1], 0.1)
+        B, _, _, _, _ = model.get(train_image[:, :, 2], 0.1)
+        newImg = np.zeros_like(train_image)
+        newImg[:, :, 0] = R
+        newImg[:, :, 1] = G
+        newImg[:, :, 2] = B
+        newImg.save('./train_svd/{}/{}'.format(classes[train_label], train_filename[idx].decode('utf8')))
+# -----------------------------------------------------------------------------------------
+# Testset Unpacking
+print('Unpacking Test File')
+test_file = unpickle('./cifar-10-batches-py/test_batch')
 
+test_data = test_file[b'data']
 
-def MutationFunc(List):
-    for i in range(4096):
-        if List[i] == 1 and random.random() < 0.08:
-            List[i] = 0
-            #print("확률!!")
+# 10000, 3072 -> 10000, 3, 32, 32 형태로 변환
+test_data_reshape = np.vstack(test_data).reshape((-1, 3, 32, 32))
+# 이미지 저장을 위해 10000, 32, 32, 3으로 변환
+test_data_reshape = test_data_reshape.swapaxes(1, 3)
+test_data_reshape = test_data_reshape.swapaxes(1, 2)
+# 레이블 리스트 생성
+test_labels = test_file[b'labels']
+# 파일 이름 리스트 생성
+test_filename = test_file[b'filenames']
+model = SVD()
+# 10000개의 파일을 순차적으로 저장
+for idx in range(10000):
+    test_label = test_labels[idx]
+    test_image = Image.fromarray(test_data_reshape[idx])
+    # 클래스 별 폴더에 파일 저장
+    R, _, _, _, _ = model.get(test_image[:, :, 0], 0.1)
+    G, _, _, _, _ = model.get(test_image[:, :, 1], 0.1)
+    B, _, _, _, _ = model.get(test_image[:, :, 2], 0.1)
+    newImg = np.zeros_like(test_image)
+    newImg[:, :, 0] = R
+    newImg[:, :, 1] = G
+    newImg[:, :, 2] = B
+    newImg.save('./test_svd/{}/{}'.format(classes[test_label], test_filename[idx].decode('utf8')))
 
-    return List
-
-
-List = [[0 for _ in range(4096)] for _ in range(Population)]
-
-new_List = copy.deepcopy(List)
-
-good_parent_index = [0, 0]
-
-count = 0
-
-for i in range(Population):
-    for j in range(len(List[0])):
-        List[i][j] = random.randint(0, 1)
-count += 1
-end = timer()
-# print("첫 부분 소요 시간 : ", timedelta(seconds=end-start))
-
-while True:
-
-    Score_list = evaluation(List)
-    print("Score_list : ", Score_list)
-    start = timer()
-    sort_Score_list = np.sort(Score_list)[::-1]
-    set_sort_Score_list = sorted(set(sort_Score_list))
-    # sort_Score_list = sorted(list(set_sort_Score_list))
-    sort_Score_list = list(reversed(set_sort_Score_list))
-    print("스코어 리스트 : ", Score_list)
-    print("정렬된 스코어 리스트 : ", sort_Score_list)
-
-    if len(sort_Score_list) <= 1:
-        mutation = 0.1
-        for i in range(2):
-            good_parent_index[i] = Score_list.index(sort_Score_list[0])
-
-    else:
-        for i in range(2):  # 최상위 부모 인덱스 리스트에서 2개 랜덤 추출
-            good_parent_index[i] = Score_list.index(sort_Score_list[i])
-        print(good_parent_index)
-
-    for i in range(Population):  # CrossOver
-        Division_Point = random.randint(1, 4093)
-        Parent_1 = List[good_parent_index[0]][:Division_Point]
-        Parent_2 = List[good_parent_index[1]][Division_Point:4096]
-        new_List[i] = Parent_1 + Parent_2
-
-    for i in range(Population):  # Mutation
-        if random.random() < mutation:
-            print("돌연변이 발생", mutation)
-            # print(new_List[i])
-            new_List[i] = MutationFunc(new_List[i])
-            # print(new_List[i])
-    if mutation == 0.1:
-        mutation = 0.02
-    List = copy.deepcopy(new_List)
-    count += 1
-    print("count : ", count)
-    end = timer()
-    print("현재 베스트 피처 수 : ", len(Best_Feature_Index))
-    print("현재 최고 점수 : ", Best_Score)
-    # print("while문 소요시간 : ", timedelta(seconds=end - start))
-
-    if count > 100 or len(Best_Feature_Index) == 1:
-        break
+print('Unpacking Finish')
 
 
-# print(Score_list)
-print(first_score)
-print("최고 점수", Best_Score)
-print(Best_Feature_Index)
-print((Best_Score - first_score) / first_score * 100)
-print("")
-print(len(Best_Feature_Index))
 
-if len(Best_Feature_Index) == 1:
-    new_train_col = new_mat_file_value.iloc[:, Best_Feature_Index]
-    km = KMeans(n_clusters=6)
-    km.fit(new_train_col)
-    sns.scatterplot(x=new_mat_file_value.iloc[:, 0], y=new_train_col.iloc[:, 0], c=km.labels_)
-    plt.show()
 
-else:
-    Best_DataSet = Best_DataSet.to_numpy()
-    km = KMeans(n_clusters=6)
-    km.fit(Best_DataSet)
-    pca = PCA(n_components=2)
-    pca_tra = pca.fit_transform(Best_DataSet)  # pca 적용할 때
-    # sns.scatterplot(x=Best_DataSet[:, 0], y=Best_DataSet[:, 1], c=km.labels_)
-    sns.scatterplot(x=pca_tra[:, 0], y=pca_tra[:, 1], c=km.labels_)  # pca 적용할 때
-    plt.show()
